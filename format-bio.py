@@ -8,14 +8,15 @@ def convert_labelstudio_to_bio_json(input_path, output_path):
 
     result = []
 
+    # Duyệt qua từng record trong dữ liệu
     for item in data:
-        text = item["text"]
-        entities = []
+        text = item["text"] # Văn bản gốc
+        entities = [] # Danh sách các thực thể (entity)
         for ent in item.get("label", []):
             entities.append({
-                "start": ent["start"],
-                "end": ent["end"],
-                "label": ent["labels"][0]
+                "start": ent["start"],      # vị trí bắt đầu của entity trong text
+                "end": ent["end"],          # vị trí kết thúc
+                "label": ent["labels"][0]   # tên nhãn (entity label)
             })
 
         # Tách token bằng regex để giữ vị trí chính xác
@@ -26,24 +27,26 @@ def convert_labelstudio_to_bio_json(input_path, output_path):
             end = match.end()
             tokens.append((token, start, end))
 
+        # Khởi tạo danh sách nhãn "O" (Outside) cho tất cả token
         labels = ["O"] * len(tokens)
 
         # Gán nhãn B- I-
         for ent in entities:
-            found = False
+            found = False # Cờ đánh dấu token đầu tiên của entity
             for i, (tok, s, e) in enumerate(tokens):
+                # Kiểm tra token nằm trong phạm vi entity
                 if s >= ent["start"] and e <= ent["end"]:
                     if not found:
-                        labels[i] = f"B-{ent['label']}"
+                        labels[i] = f"B-{ent['label']}" # Token đầu tiên B-
                         found = True
                     else:
-                        labels[i] = f"I-{ent['label']}"
+                        labels[i] = f"I-{ent['label']}" # Các token sau I-
 
         # Thêm vào danh sách kết quả
         result.append({
-            "tokens": [tok for tok, _, _ in tokens],
+            "tokens": [tok for tok, _, _ in tokens],  # danh sách token
             "ner_tags": labels
-        })
+        })                                            # danh sách nhãn tương ứng
 
     # Ghi ra file JSON
     with open(output_path, "w", encoding="utf-8") as f:
