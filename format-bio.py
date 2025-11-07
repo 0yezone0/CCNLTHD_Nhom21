@@ -1,5 +1,5 @@
 import json
-import re
+import re 
 
 def convert_labelstudio_to_bio_json(input_path, output_path):
     # Đọc dữ liệu Label Studio
